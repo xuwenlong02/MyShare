@@ -1,8 +1,14 @@
-class UpperShadow(object):
-    """description of class"""
-    def __init__(self,rdata):
-        self.rdata = rdata
+import pandas as pd
+from pandas import DataFrame
+from share.strategy import Strategy
+import datetime
+import os
+import threading
+from time import ctime,sleep
 
-    def ExecuteStategy(self):
-        pass
+class UpperShadow(Strategy):
+    """description of class"""
+    
+    def IsCorporate(self,df):
+        return False
 

@@ -1,8 +1,13 @@
-class AvlineBone(object):
+import pandas as pd
+from pandas import DataFrame
+from share.strategy import Strategy
+import datetime
+import os
+import threading
+from time import ctime,sleep
+
+class AvlineBone(Strategy):
     """description of class"""
 
-    def __init__(self,rdata):
-        self.rdata = rdata
-
-    def ExecuteStategy(self):
-        pass
+    def IsCorporate(self,df):
+        return self.isAvlineBone(df)

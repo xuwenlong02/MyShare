@@ -79,10 +79,9 @@ class TradeVolum(QWidget):
     def drawMaLine(self,qp,kw,kh,n,color):
         pen = QPen(color,1,Qt.SolidLine)
         qp.setPen(pen)
-        stg = Strategy()
-        p0 = QPoint(15+kw*(self.N-1)+kw*0.5,15+(self.max-stg.mv_n(self.pf,0,n))*kh)
+        p0 = QPoint(15+kw*(self.N-1)+kw*0.5,15+(self.max-Strategy.mv_n(self.pf,0,n))*kh)
         for i in range(1,self.N,1):
-            ma = stg.mv_n(self.pf,i,n)
+            ma = Strategy.mv_n(self.pf,i,n)
             if ma == 0:
                 break
             p1 = QPoint(15+kw*(self.N-i-1)+kw*0.5,15+(self.max-ma)*kh)

@@ -58,6 +58,7 @@
     <Compile Include="share\lowsuction.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="share\sharedata.py" />
     <Compile Include="share\strategy.py">
       <SubType>Code</SubType>
     </Compile>
