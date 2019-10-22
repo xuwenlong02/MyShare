@@ -68,14 +68,14 @@ class Strategy(object):
     def greaterThan(v1,v2):
         mid = (v1+v2)/2
         diff = (v1-v2)/mid 
-        if diff>= -0.015 and diff < 0.18:
+        if diff>= -0.009 and diff < 0.18:
             return True
         return False
 
     def equalTo(v1,v2):
         mid = (v1+v2)/2
         diff = (v1-v2)/mid 
-        if diff>= -0.015 and diff <= 0.015:
+        if diff>= -0.009 and diff <= 0.009:
             return True
         return False
     
@@ -160,4 +160,11 @@ class Strategy(object):
         except:
             print(rdata)
             return -100
+
+    @staticmethod
+    def is_vol_right(rdata,k):
+        if (rdata.loc[k, 'close'] > rdata.loc[k+1,'close'] and rdata.loc[k, 'vol'] >= rdata.loc[k+1,'vol']) or (
+                    rdata.loc[k, 'close'] <= rdata.loc[k+1,'close'] and rdata.loc[k, 'vol'] <= rdata.loc[k+1,'vol']):
+            return True
+        return False
 

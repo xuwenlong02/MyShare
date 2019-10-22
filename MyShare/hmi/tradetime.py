@@ -113,13 +113,13 @@ class TradeTime(QWidget):
 
         #绘制均线
         #5日
-        self.drawMaLine(qp,kw,kh,5,QColor(0,0,0))
-        #10日
-        self.drawMaLine(qp,kw,kh,10,QColor(255,201,14))
+        self.drawEmaLine(qp,kw,kh,5,QColor(0,0,0))
+        #13日
+        self.drawEmaLine(qp,kw,kh,13,QColor(255,201,14))
         #24日
-        self.drawMaLine(qp,kw,kh,24,QColor(255,0,128))
+        self.drawEmaLine(qp,kw,kh,24,QColor(255,0,128))
         #56日
-        self.drawMaLine(qp,kw,kh,56,QColor(0,255,64))
+        self.drawEmaLine(qp,kw,kh,56,QColor(0,255,64))
 
     def drawMaLine(self,qp,kw,kh,n,color):
         pen = QPen(color,1,Qt.SolidLine)
@@ -130,5 +130,21 @@ class TradeTime(QWidget):
             if ma == 0:
                 break
             p1 = QPoint(15+kw*(self.N-i-1)+kw*0.5,15+(self.top-ma)*kh)
+            qp.drawLine(p0,p1)
+            p0 = p1
+
+    def drawEmaLine(self,qp,kw,kh,n,color):
+        pen = QPen(color,1,Qt.SolidLine)
+        qp.setPen(pen)
+        ema_b = Strategy.ema_n(self.pf,self.N,n)
+        ema = Strategy.ema_pre_n(self.pf,ema_b,self.N-1,n)
+        ema_b = ema
+        p0 = QPoint(15+kw*0.5,15+(self.top-ema)*kh)
+        for i in range(self.N-2,-1,-1):
+            ema = Strategy.ema_pre_n(self.pf,ema_b,i,n)
+            ema_b = ema
+            if ema == 0:
+                break
+            p1 = QPoint(15+kw*(self.N-i-1)+kw*0.5,15+(self.top-ema)*kh)
             qp.drawLine(p0,p1)
             p0 = p1
