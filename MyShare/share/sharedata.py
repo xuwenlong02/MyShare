@@ -22,16 +22,16 @@ class ShareData(object):
         self.liData = DataFrame()
         liThs = []
         length = len(rdata)
-        for i in range(0, length, 200):
+        for i in range(0, length, 50):
             # 测试
             if i + 50 <= length:
-                th = threading.Thread(name='%d' % i, target=threadUpdateData, args=(self, self.rdata[i:i + 200]))
+                th = threading.Thread(name='%d' % i, target=threadUpdateData, args=(self, self.rdata[i:i + 50]))
             else:
                 th = threading.Thread(name='%d' % i, target=threadUpdateData, args=(self, self.rdata[i:-1]))
 
             liThs.append(th)
             th.start()
-            sleep(65)
+            sleep(16)
 
         for th in liThs:
             th.join(30)

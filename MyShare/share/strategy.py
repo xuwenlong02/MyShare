@@ -41,7 +41,7 @@ class Strategy(object):
             df = pd.read_csv(path,encoding='gbk',dtype={'ts_code':object,'trade_date':object,'open':float,
                                                                      'high':float,'low':float,'close':float,'pre_close':float,
                                                                      'change':float,'pct_chg':float,'vol':float,'amount':float})
-            if df is None or len(df) == 0:
+            if df is None or len(df) <20:
                 continue
             if self.IsCorporate(df):
                 self.liData = self.liData.append(row, ignore_index=True)

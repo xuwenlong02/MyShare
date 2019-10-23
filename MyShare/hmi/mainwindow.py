@@ -84,6 +84,7 @@ class MainWindow(QMainWindow):
         elif index == 1:
             #上影线战法
             us = UpperShadow(self.stocks)
+            self.noticeStocks = us.resultList()
             self.listWidget.setData(us.resultList())
             
         elif index == 2:
@@ -94,4 +95,5 @@ class MainWindow(QMainWindow):
         elif index == 3:
             #均线粘合
             us = AvlineBone(self.stocks)
+            self.noticeStocks = us.resultList()
             self.listWidget.setData(us.resultList())
