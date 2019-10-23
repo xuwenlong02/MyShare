@@ -28,9 +28,9 @@ class TimingStatus(QWidget):
         #self.tpWidget.setColumnWidth(2,80)
         #self.tpWidget.setModel(self.priceModel)
         vbox = QVBoxLayout()
-        vbox.addWidget(self.titleWidget,10)
-        vbox.addWidget(self.ttWidget,60)
-        vbox.addWidget(self.tvWidget,30)
+        vbox.addWidget(self.titleWidget,5)
+        vbox.addWidget(self.ttWidget,75)
+        vbox.addWidget(self.tvWidget,20)
         self.setLayout(vbox)
 
     def activeCode(self,rdata):

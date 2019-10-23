@@ -74,7 +74,25 @@ class MainWindow(QMainWindow):
         code = self.noticeStocks.ix[index.row(),'ts_code']
         df =  pd.read_csv('./data/%s.csv'%code,encoding='gbk',dtype={'ts_code':object,'trade_date':object,'open':float,
                                                                      'high':float,'low':float,'close':float,'pre_close':float,
-                                                                     'change':float,'pct_chg':float,'vol':float,'amount':float})
+                                                         'change':float,'pct_chg':float,'vol':float,'amount':float})
+        if df is None:
+            return
+        strdate = datetime.datetime.now().strftime('%Y%m%d')
+        if df.loc[0,'trade_date'] != strdate:
+            symbol = self.noticeStocks.ix[index.row(),'symbol']
+            tdf = ts.get_realtime_quotes(symbol)
+            if tdf is not None:
+                if datetime.datetime.strptime(tdf.loc[0,'date'],'%Y%m%d') == datetime.datetime.strptime(strdate,'%Y%m%d'):
+                    open = float(tdf.loc[0,'open'])
+                    high = float(tdf.loc[0,'high'])
+                    low = float(tdf.loc[0,'low'])
+                    close = float(tdf.loc[0,'close'])
+                    pre_close = float(tdf.loc[0,'pre_close'])
+                    vol = float(tdf.loc[0,'volume'])/100
+                    amount = float(tdf.loc[0,'amount'])
+                    df.loc[-1] = [code,datetime.datetime.now().strftime('%Y%m%d'),open,high,low,close,pre_close,0,(close-pre_close)/pre_close,vol,amount]
+                    df.index = df.index+1
+                    df = df.sort_index()
         self.tradeWidget.activeCode(df)
 
     def SlotStrategy(self,index):
