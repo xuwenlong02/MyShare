@@ -12,7 +12,8 @@ class UpperShadow(Strategy):
     def IsCorporate(self,df):
         """1、今日放量，至少比前几日高，且有上影线 2、
          n日内横盘 3、n+1日之前两天涨幅出现过大于6%以上 4、多头排列就算了"""
-
+        if not Strategy.isStrongArranged(df):
+            return False
         pcg_chg = df.loc[0, 'pct_chg']
         if pcg_chg < -8 and pcg_chg > 8:
             return False
@@ -24,9 +25,10 @@ class UpperShadow(Strategy):
         low = df.loc[0,'low']
         ul = high-max(open,close)
 
-        emv = Strategy.mv_n(df,1,5)
+        #emv = Strategy.mv_n(df,1,5)
+        emv = df.loc[1,'vol']
 
-        if vol >= emv*1.2 and vol < emv*2.5 and ul> 0:
+        if vol >= emv*2 and vol < emv*5 and ul> 0:
             for i in range(1,10,1):
                 if df.loc[i,'high'] > high:
                     return False

@@ -22,16 +22,16 @@ class ShareData(object):
         self.liData = DataFrame()
         liThs = []
         length = len(rdata)
-        for i in range(0, length, 50):
+        for i in range(0, length, 40):
             # 测试
-            if i + 50 <= length:
-                th = threading.Thread(name='%d' % i, target=threadUpdateData, args=(self, self.rdata[i:i + 50]))
+            if i + 40 <= length:
+                th = threading.Thread(name='%d' % i, target=threadUpdateData, args=(self, self.rdata[i:i + 40]))
             else:
                 th = threading.Thread(name='%d' % i, target=threadUpdateData, args=(self, self.rdata[i:-1]))
 
             liThs.append(th)
             th.start()
-            sleep(16)
+            sleep(15)
 
         for th in liThs:
             th.join(30)
@@ -46,6 +46,6 @@ class ShareData(object):
             code = row['ts_code']
             df = self.pro.daily(ts_code=code, start_date='20190101',
                                 end_date=datetime.datetime.now().strftime('%Y%m%d'))
-            if df is None or len(df) == 0:
+            if df is None or len(df) < 20:
                 continue
             df.to_csv("./data/%s.csv"%code,encoding='gbk')

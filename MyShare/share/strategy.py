@@ -3,7 +3,9 @@ from pandas import DataFrame
 import datetime
 import os
 import threading
+import math
 from time import ctime,sleep
+import tushare as ts
 
 def runStrategy(ls,row):
     ls.ExecuteStategy(row)
@@ -15,10 +17,10 @@ class Strategy(object):
         self.liData = DataFrame()
         liThs = []
         length = len(rdata)
-        for i in range(0,length,10):
+        for i in range(0,length,20):
             #测试
-            if i+10 <= length:
-                th = threading.Thread(name='%d'%i,target = runStrategy,args=(self,self.rdata[i:i+10]))
+            if i+20 <= length:
+                th = threading.Thread(name='%d'%i,target = runStrategy,args=(self,self.rdata[i:i+20]))
             else:
                 th = threading.Thread(name='%d'%i,target = runStrategy,args=(self,self.rdata[i:-1]))
 
@@ -38,12 +40,38 @@ class Strategy(object):
             path = './data/%s.csv'%code
             if not os.path.exists(path):
                 continue
-            df = pd.read_csv(path,encoding='gbk',dtype={'ts_code':object,'trade_date':object,'open':float,
+            rdf = pd.read_csv(path,encoding='gbk',dtype={'ts_code':object,'trade_date':object,'open':float,
                                                                      'high':float,'low':float,'close':float,'pre_close':float,
                                                                      'change':float,'pct_chg':float,'vol':float,'amount':float})
-            if df is None or len(df) <20:
+            if rdf is None or len(rdf) <20:
                 continue
-            if self.IsCorporate(df):
+            strtoday = datetime.datetime.now().strftime('%Y%m%d')
+            if rdf.loc[0, 'trade_date'] != strtoday:
+                symbol = row['symbol']
+                tdf = ts.get_realtime_quotes(symbol)
+                if tdf is not None:
+                    strdate = tdf.ix[0, 'date']
+                    if datetime.datetime.strptime(strdate, '%Y-%m-%d') == datetime.datetime.strptime(strtoday,
+                                                                                                     '%Y%m%d'):
+                        open = float(tdf.ix[0, 'open'])
+                        high = float(tdf.ix[0, 'high'])
+                        low = float(tdf.ix[0, 'low'])
+                        close = float(tdf.ix[0, 'price'])
+                        pre_close = float(tdf.ix[0, 'pre_close'])
+                        vol = float(tdf.ix[0, 'volume']) / 100
+                        amount = float(tdf.ix[0, 'amount']) / 1000
+
+                        rw = {'ts_code': [code], 'trade_date': [datetime.datetime.now().strftime('%Y%m%d')],
+                              'open': [open],
+                              'high': [high], 'low': [low], 'close': [close], 'pre_close': [pre_close], 'change': [0.0],
+                              'pct_chg': [(close - pre_close) / pre_close * 100], 'vol': [vol], 'amount': [amount]}
+                        df_new = DataFrame(data=rw, index=None)
+                        # columns = ['ts_code', 'trade_date', 'open', 'high', 'low', 'close',
+                        #            'pre_close', 'change', 'pct_chg', 'vol', 'amount']
+                        # old = rdf.loc[0:]
+
+                        rdf = df_new.append(rdf, ignore_index=True,sort = True)
+            if self.IsCorporate(rdf):
                 self.liData = self.liData.append(row, ignore_index=True)
 
     def IsCorporate(self,df):
@@ -52,16 +80,16 @@ class Strategy(object):
     @staticmethod
     def isStrongArranged(rdata):
         """是否均线多头排列"""
-        ema5 = Strategy.ema_n(rdata,0,5)
-        ema10 = Strategy.ema_n(rdata,0,10)
-        ema24 = Strategy.ema_n(rdata,0,24)
-        #ema54 = Strategy.ema_n(rdata,0,54)
+        ema5 = Strategy.ma_n(rdata,0,5)
+        ema10 = Strategy.ma_n(rdata,0,10)
+        ema24 = Strategy.ma_n(rdata,0,24)
+        ema54 = Strategy.ma_n(rdata,0,54)
 
         if ema5 == 0 or ema10 == 0 or ema24 == 0:
             return False
         if not Strategy.trendUpward(rdata):
             return False
-        if Strategy.greaterThan(ema5,ema10) and Strategy.greaterThan(ema10,ema24):
+        if Strategy.greaterThan(ema5,ema54) and Strategy.greaterThan(ema10,ema54):
             return True
         return False
     
@@ -95,13 +123,21 @@ class Strategy(object):
 
     @staticmethod
     def trendUpward(rdata):
-        ema54_2 = Strategy.ema_n(rdata,2,54)
-        if ema54_2 == 0:
+        ema5_0 = Strategy.ma_n(rdata,0,5)
+        ema5_1 = Strategy.ma_n(rdata,1,5)
+        #ema5_2 = Strategy.ma_n(rdata,2, 5)
+        ema10_0 = Strategy.ma_n(rdata, 0, 10)
+        ema10_1 = Strategy.ma_n(rdata, 1, 10)
+        #ema10_2 = Strategy.ma_n(rdata, 2, 10)
+        if ema5_0 == 0 or ema5_1 == 0 or ema10_0 == 0 or ema10_1 == 0:
             return False
-        ema54_1 = Strategy.ema_pre_n(rdata,ema54_2,1,54)
-        ema54_0 = Strategy.ema_pre_n(rdata,ema54_1,0,54)
-        if ema54_0>= ema54_1 and ema54_1>=ema54_2:
+        if (ema5_0 - ema10_0) >= (ema5_1-ema10_1):
             return True
+        # vct5 = ema5_0-ema5_1
+        # vct10 = ema10_0-ema10_1
+        # cos = (1+vct5*vct10)/(math.sqrt((1+vct5*vct5))*math.sqrt(1+vct10*vct10))
+        # if cos >0 and cos < 0.73:
+        #     return True
         return False
 
     @staticmethod

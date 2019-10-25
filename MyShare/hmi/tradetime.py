@@ -113,13 +113,13 @@ class TradeTime(QWidget):
 
         #绘制均线
         #5日
-        self.drawEmaLine(qp,kw,kh,5,QColor(0,0,0))
+        self.drawMaLine(qp,kw,kh,5,QColor(0,0,0))
         #13日
-        self.drawEmaLine(qp,kw,kh,13,QColor(255,201,14))
+        self.drawMaLine(qp,kw,kh,13,QColor(255,201,14))
         #24日
-        self.drawEmaLine(qp,kw,kh,24,QColor(255,0,128))
+        self.drawMaLine(qp,kw,kh,24,QColor(255,0,128))
         #56日
-        self.drawEmaLine(qp,kw,kh,56,QColor(0,255,64))
+        self.drawMaLine(qp,kw,kh,56,QColor(0,255,64))
 
     def drawMaLine(self,qp,kw,kh,n,color):
         pen = QPen(color,1,Qt.SolidLine)

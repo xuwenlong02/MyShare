@@ -72,28 +72,38 @@ class MainWindow(QMainWindow):
 
     def Slot_ItemClicked(self,index):
         code = self.noticeStocks.ix[index.row(),'ts_code']
-        df =  pd.read_csv('./data/%s.csv'%code,encoding='gbk',dtype={'ts_code':object,'trade_date':object,'open':float,
+        types = {'ts_code':object,'trade_date':object,'open':float,
                                                                      'high':float,'low':float,'close':float,'pre_close':float,
-                                                         'change':float,'pct_chg':float,'vol':float,'amount':float})
-        if df is None:
+                                                         'change':float,'pct_chg':float,'vol':float,'amount':float}
+        rdf =  pd.read_csv('./data/%s.csv'%code,encoding='gbk',dtype=types)
+        if rdf is None or len(rdf) < 20:
             return
-        strdate = datetime.datetime.now().strftime('%Y%m%d')
-        if df.loc[0,'trade_date'] != strdate:
+        strtoday = datetime.datetime.now().strftime('%Y%m%d')
+        if rdf.loc[0,'trade_date'] != strtoday:
             symbol = self.noticeStocks.ix[index.row(),'symbol']
             tdf = ts.get_realtime_quotes(symbol)
             if tdf is not None:
-                if datetime.datetime.strptime(tdf.loc[0,'date'],'%Y%m%d') == datetime.datetime.strptime(strdate,'%Y%m%d'):
-                    open = float(tdf.loc[0,'open'])
-                    high = float(tdf.loc[0,'high'])
-                    low = float(tdf.loc[0,'low'])
-                    close = float(tdf.loc[0,'close'])
-                    pre_close = float(tdf.loc[0,'pre_close'])
-                    vol = float(tdf.loc[0,'volume'])/100
-                    amount = float(tdf.loc[0,'amount'])
-                    df.loc[-1] = [code,datetime.datetime.now().strftime('%Y%m%d'),open,high,low,close,pre_close,0,(close-pre_close)/pre_close,vol,amount]
-                    df.index = df.index+1
-                    df = df.sort_index()
-        self.tradeWidget.activeCode(df)
+                strdate = tdf.ix[0,'date']
+                if datetime.datetime.strptime(strdate,'%Y-%m-%d') == datetime.datetime.strptime(strtoday,'%Y%m%d'):
+                    open = float(tdf.ix[0,'open'])
+                    high = float(tdf.ix[0,'high'])
+                    low = float(tdf.ix[0,'low'])
+                    close = float(tdf.ix[0,'price'])
+                    pre_close = float(tdf.ix[0,'pre_close'])
+                    vol = float(tdf.ix[0,'volume'])/100
+                    amount = float(tdf.ix[0,'amount'])/1000
+
+                    rw = {'ts_code':[code],'trade_date':[datetime.datetime.now().strftime('%Y%m%d')],'open':[open],
+                             'high':[high],'low':[low],'close':[close],'pre_close':[pre_close],'change':[0.0],
+                             'pct_chg':[(close-pre_close)/pre_close*100],'vol':[vol],'amount':[amount]}
+                    df_new = df(data = rw,index=None)
+                    # columns = ['ts_code', 'trade_date', 'open', 'high', 'low', 'close',
+                    #            'pre_close', 'change', 'pct_chg', 'vol', 'amount']
+                    #old = rdf.loc[0:]
+
+                    rdf = df_new.append(rdf,ignore_index=True,sort = True)
+
+        self.tradeWidget.activeCode(rdf)
 
     def SlotStrategy(self,index):
         if index == 0:
