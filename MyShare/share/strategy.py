@@ -6,6 +6,7 @@ import threading
 import math
 from time import ctime,sleep
 import tushare as ts
+from multiprocessing import Process,Lock
 
 def runStrategy(ls,row):
     ls.ExecuteStategy(row)
@@ -15,8 +16,10 @@ class Strategy(object):
     def __init__(self,rdata):
         self.rdata = rdata
         self.liData = DataFrame()
+        self.mutex = Lock()
         liThs = []
         length = len(rdata)
+        
         for i in range(0,length,20):
             #测试
             if i+20 <= length:
@@ -37,6 +40,10 @@ class Strategy(object):
     def ExecuteStategy(self,piece):
         for index,row in piece.iterrows():
             code = row['ts_code']
+            symbol = row['symbol']
+
+            if 'ST' in symbol or '退' in symbol:
+                continue
             path = './data/%s.csv'%code
             if not os.path.exists(path):
                 continue
@@ -45,37 +52,43 @@ class Strategy(object):
                                                                      'change':float,'pct_chg':float,'vol':float,'amount':float})
             if rdf is None or len(rdf) <20:
                 continue
-            strtoday = datetime.datetime.now().strftime('%Y%m%d')
-            if rdf.loc[0, 'trade_date'] != strtoday:
-                symbol = row['symbol']
-                tdf = ts.get_realtime_quotes(symbol)
-                if tdf is not None:
-                    strdate = tdf.ix[0, 'date']
-                    if datetime.datetime.strptime(strdate, '%Y-%m-%d') == datetime.datetime.strptime(strtoday,
-                                                                                                     '%Y%m%d'):
-                        open = float(tdf.ix[0, 'open'])
-                        high = float(tdf.ix[0, 'high'])
-                        low = float(tdf.ix[0, 'low'])
-                        close = float(tdf.ix[0, 'price'])
-                        pre_close = float(tdf.ix[0, 'pre_close'])
-                        vol = float(tdf.ix[0, 'volume']) / 100
-                        amount = float(tdf.ix[0, 'amount']) / 1000
+            rdf = self.nowadayDf(code,symbol,rdf)
+            if self.IsCorporate(rdf):
+                self.mutex.acquire()
+                self.liData = self.liData.append(row, ignore_index=True)
+                self.mutex.release()
 
-                        rw = {'ts_code': [code], 'trade_date': [datetime.datetime.now().strftime('%Y%m%d')],
-                              'open': [open],
-                              'high': [high], 'low': [low], 'close': [close], 'pre_close': [pre_close], 'change': [0.0],
-                              'pct_chg': [(close - pre_close) / pre_close * 100], 'vol': [vol], 'amount': [amount]}
-                        df_new = DataFrame(data=rw, index=None)
+    def IsCorporate(self,df):
+        return False
+
+    @staticmethod
+    def nowadayDf(code,symbol,rdf):
+        strtoday = datetime.datetime.now().strftime('%Y%m%d')
+        if rdf.loc[0, 'trade_date'] != strtoday:
+            
+            tdf = ts.get_realtime_quotes(symbol)
+            if tdf is not None:
+                tradeday = datetime.datetime.strptime(tdf.ix[0, 'date'], '%Y-%m-%d')
+                lastday = datetime.datetime.strptime(rdf.loc[0, 'trade_date'],'%Y%m%d')
+                if tradeday > lastday:
+                    open = float(tdf.ix[0, 'open'])
+                    high = float(tdf.ix[0, 'high'])
+                    low = float(tdf.ix[0, 'low'])
+                    close = float(tdf.ix[0, 'price'])
+                    pre_close = float(tdf.ix[0, 'pre_close'])
+                    vol = float(tdf.ix[0, 'volume']) / 100
+                    amount = float(tdf.ix[0, 'amount']) / 1000
+
+                    rw = {'ts_code': [code], 'trade_date': [tradeday.strftime('%Y%m%d')], 'open': [open],'high': [high], 'low': [low], 
+                          'close': [close], 'pre_close': [pre_close], 'change': [0.0],
+                          'pct_chg': [(close - pre_close) / pre_close * 100], 'vol': [vol], 'amount': [amount]}
+                    df_new = DataFrame(data=rw, index=None)
                         # columns = ['ts_code', 'trade_date', 'open', 'high', 'low', 'close',
                         #            'pre_close', 'change', 'pct_chg', 'vol', 'amount']
                         # old = rdf.loc[0:]
 
-                        rdf = df_new.append(rdf, ignore_index=True,sort = True)
-            if self.IsCorporate(rdf):
-                self.liData = self.liData.append(row, ignore_index=True)
-
-    def IsCorporate(self,df):
-        return False
+                    rdf = df_new.append(rdf, ignore_index=True,sort = True)
+        return rdf
 
     @staticmethod
     def isStrongArranged(rdata):
@@ -106,6 +119,31 @@ class Strategy(object):
         if diff>= -0.009 and diff <= 0.009:
             return True
         return False
+
+    @staticmethod
+    def weight(rdata):
+        ema5 = Strategy.ma_n(rdata,0,5)
+        ema10 = Strategy.ma_n(rdata,0,10)
+        ema24 = Strategy.ma_n(rdata,0,24)
+        ema54 = Strategy.ma_n(rdata,0,54)
+        ema5_1 = Strategy.ma_n(rdata,1,5)
+        ema10_1 = Strategy.ma_n(rdata,1,10)
+        ema24_1 = Strategy.ma_n(rdata,1,24)
+        ema54_1 = Strategy.ma_n(rdata,1,54)
+
+        if ema5_1 == 0:
+            return 0
+        av5 = (ema5-ema5_1)/ema5_1
+        if ema10_1 == 0:
+            return av5*41*100
+        av10 = (ema10-ema10_1)/ema10_1
+        if ema24_1 == 0:
+            return (av5*41+av10*31)*100
+        av24 = (ema24-ema24_1)/ema24_1
+        if ema54_1 == 0:
+            return (av5*41+av10*31+av24*17)*100
+        av54 = (ema54-ema54_1)/ema54_1
+        return (av5*41+av10*31+av24*17+av54*11)*100
     
     @staticmethod
     def isAvlineBone(rdata):
@@ -131,7 +169,7 @@ class Strategy(object):
         #ema10_2 = Strategy.ma_n(rdata, 2, 10)
         if ema5_0 == 0 or ema5_1 == 0 or ema10_0 == 0 or ema10_1 == 0:
             return False
-        if (ema5_0 - ema10_0) >= (ema5_1-ema10_1):
+        if (ema5_0 - ema10_0) >= (ema5_1-ema10_1) and ema5_0>=ema5_1 and ema10_0>=ema10_1:
             return True
         # vct5 = ema5_0-ema5_1
         # vct10 = ema10_0-ema10_1

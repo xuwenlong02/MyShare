@@ -119,7 +119,7 @@ class TradeTime(QWidget):
         #24日
         self.drawMaLine(qp,kw,kh,24,QColor(255,0,128))
         #56日
-        self.drawMaLine(qp,kw,kh,56,QColor(0,255,64))
+        self.drawMaLine(qp,kw,kh,54,QColor(0,255,64))
 
     def drawMaLine(self,qp,kw,kh,n,color):
         pen = QPen(color,1,Qt.SolidLine)

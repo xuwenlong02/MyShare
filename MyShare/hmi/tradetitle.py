@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QWidget, QApplication,QLabel,QGridLayout
 from PyQt5.QtGui import QPainter, QColor, QFont,QPen
 from PyQt5.QtCore import Qt
+from share.strategy import Strategy
 
 
 class TradeTitle(QWidget):
@@ -10,7 +11,7 @@ class TradeTitle(QWidget):
     def __init__(self):
         super().__init__()
         self.labPrice = QLabel("<font color='red' size=40px >6.54</font>")
-        #self.labPrice.setFont(QFont(pointSize=18))
+        self.labPrice.setFont(QFont('微软雅黑',40))
         self.labRate = QLabel("<font color='red'>--%</font>")
         self.labHigh = QLabel("高 <font color='red'>--</font>")
         self.labLow= QLabel("低 <font color='blue'>--</font>")
@@ -19,19 +20,20 @@ class TradeTitle(QWidget):
         self.labVolum = QLabel("量 <font color='black'>--万</font>")
         self.labOver = QLabel("额 <font color='black'>--亿</font>")
         self.labDate = QLabel("")
+        self.labWeight = QLabel("权重 <font color='red'>0</font>")
         grid = QGridLayout()
         col = 0
         row = 0
         grid.addWidget(self.labPrice,row,col,3,3)
-        grid.addWidget(self.labDate,row+3,col,3,1)
-        grid.addWidget(self.labRate,row+3,col+3,1,1)
+        grid.addWidget(self.labDate,row+3,col,1,2)
+        grid.addWidget(self.labRate,row+3,col+2,1,1)
 
         col =col+4
         grid.addWidget(self.labHigh,0,col,2,2)
         grid.addWidget(self.labLow,2,col,2,2)
         col = col+2
         grid.addWidget(self.labOpen,0,col,2,2)
-        grid.addWidget(self.labChange,2,col,2,2)
+        grid.addWidget(self.labWeight,2,col,2,2)
         col = col+2
         grid.addWidget(self.labVolum,0,col,2,2)
         grid.addWidget(self.labOver,2,col,2,2)
@@ -60,6 +62,7 @@ class TradeTitle(QWidget):
             amount = rdata.ix[0,'amount']/10
             self.labVolum.setText("量 %0.2f万"%volum)
             self.labOver.setText("额 %0.2f万"%amount)
+            self.labWeight.setText("权重 <font color='red'>%0.2f</font>"%Strategy.weight(rdata))
         else:
             self.labPrice.setText("--")
             self.labRate.setText("--")
@@ -74,6 +77,6 @@ class TradeTitle(QWidget):
         self.labHigh.adjustSize()
         self.labLow.adjustSize()
         self.labOpen.adjustSize()
-        self.labChange.adjustSize()
+        self.labWeight.adjustSize()
         self.labVolum.adjustSize()
         self.labOver.adjustSize()

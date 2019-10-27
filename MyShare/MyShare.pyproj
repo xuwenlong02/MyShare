@@ -65,6 +65,9 @@
     <Compile Include="share\uppershadow.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="share\limitforecast.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="hmi\" />

@@ -15,7 +15,10 @@ from share.avlinebone import AvlineBone
 from share.lowsuction import LowSuction
 from share.uppershadow import UpperShadow
 from share.sharedata import ShareData
+from share.limitforecast import LimitForecast
 import datetime
+from share.strategy import Strategy
+
 
 class MainWindow(QMainWindow):
     """description of class"""
@@ -36,13 +39,13 @@ class MainWindow(QMainWindow):
         upAction.triggered.connect(self.updateData)
         menubar.addMenu(funcMenu)
 
-        self.setGeometry(10,10,800,600)
+        self.setGeometry(10,10,1400,800)
         self.setWindowIcon(QIcon("image/title.jpg"))
         self.setWindowTitle("行情观察")
         
         self.listWidget = ShareListWidget()
         self.comSelect = QComboBox()
-        self.comSelect.addItems(['全部','上影线战法','低吸战法','均线粘合向上'])
+        self.comSelect.addItems(['全部','上影线战法','低吸战法','均线粘合向上','涨停式上影线战法'])
         vbox = QVBoxLayout()
         vbox.addWidget(self.comSelect,1)
         vbox.addWidget(self.listWidget,15)
@@ -72,36 +75,14 @@ class MainWindow(QMainWindow):
 
     def Slot_ItemClicked(self,index):
         code = self.noticeStocks.ix[index.row(),'ts_code']
+        symbol = self.noticeStocks.ix[index.row(),'symbol']
         types = {'ts_code':object,'trade_date':object,'open':float,
                                                                      'high':float,'low':float,'close':float,'pre_close':float,
                                                          'change':float,'pct_chg':float,'vol':float,'amount':float}
         rdf =  pd.read_csv('./data/%s.csv'%code,encoding='gbk',dtype=types)
         if rdf is None or len(rdf) < 20:
             return
-        strtoday = datetime.datetime.now().strftime('%Y%m%d')
-        if rdf.loc[0,'trade_date'] != strtoday:
-            symbol = self.noticeStocks.ix[index.row(),'symbol']
-            tdf = ts.get_realtime_quotes(symbol)
-            if tdf is not None:
-                strdate = tdf.ix[0,'date']
-                if datetime.datetime.strptime(strdate,'%Y-%m-%d') == datetime.datetime.strptime(strtoday,'%Y%m%d'):
-                    open = float(tdf.ix[0,'open'])
-                    high = float(tdf.ix[0,'high'])
-                    low = float(tdf.ix[0,'low'])
-                    close = float(tdf.ix[0,'price'])
-                    pre_close = float(tdf.ix[0,'pre_close'])
-                    vol = float(tdf.ix[0,'volume'])/100
-                    amount = float(tdf.ix[0,'amount'])/1000
-
-                    rw = {'ts_code':[code],'trade_date':[datetime.datetime.now().strftime('%Y%m%d')],'open':[open],
-                             'high':[high],'low':[low],'close':[close],'pre_close':[pre_close],'change':[0.0],
-                             'pct_chg':[(close-pre_close)/pre_close*100],'vol':[vol],'amount':[amount]}
-                    df_new = df(data = rw,index=None)
-                    # columns = ['ts_code', 'trade_date', 'open', 'high', 'low', 'close',
-                    #            'pre_close', 'change', 'pct_chg', 'vol', 'amount']
-                    #old = rdf.loc[0:]
-
-                    rdf = df_new.append(rdf,ignore_index=True,sort = True)
+        rdf = Strategy.nowadayDf(code,symbol,rdf)
 
         self.tradeWidget.activeCode(rdf)
 
@@ -123,5 +104,10 @@ class MainWindow(QMainWindow):
         elif index == 3:
             #均线粘合
             us = AvlineBone(self.stocks)
+            self.noticeStocks = us.resultList()
+            self.listWidget.setData(us.resultList())
+        elif index == 4:
+            #均线粘合
+            us = LimitForecast(self.stocks)
             self.noticeStocks = us.resultList()
             self.listWidget.setData(us.resultList())
