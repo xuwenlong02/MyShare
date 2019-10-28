@@ -15,6 +15,8 @@ class LowSuction(Strategy):
         之后一直调整且缩量，且没有突破5日均线,
         最好有长上影线和长下影线
         """
+        if not Strategy.isStrongArranged(df):
+           return False
         pcg_chg = df.loc[0,'pct_chg']
         if pcg_chg < -7 and pcg_chg > 7:
             return False

@@ -93,17 +93,22 @@ class Strategy(object):
     @staticmethod
     def isStrongArranged(rdata):
         """是否均线多头排列"""
-        ema5 = Strategy.ma_n(rdata,0,5)
-        ema10 = Strategy.ma_n(rdata,0,10)
-        ema24 = Strategy.ma_n(rdata,0,24)
-        ema54 = Strategy.ma_n(rdata,0,54)
 
-        if ema5 == 0 or ema10 == 0 or ema24 == 0:
+        ema5 = Strategy.ema_n(rdata, 0, 5)
+        ema13 = Strategy.ema_n(rdata, 0, 13)
+        ema24 = Strategy.ema_n(rdata, 0, 24)
+        ema54 = Strategy.ema_n(rdata, 0, 54)
+
+        if ema5 == 0 or ema10 == 0 or ema24 == 0 or ema54 == 0:
             return False
-        if not Strategy.trendUpward(rdata):
-            return False
-        if Strategy.greaterThan(ema5,ema54) and Strategy.greaterThan(ema10,ema54):
-            return True
+        inc5 = (ema5 - ema13) / ema13
+        inc13 = (ema13 - ema24) / ema24
+        inc24 = (ema24 - ema54) / ema54
+
+        if (inc5 > 0 and inc13 > 0) or (inc13 > 0 and inc24 > 0) or (inc5 > 0 and inc24 > 0):
+            if (inc5 <= 0.07 and inc5 >= -0.07) and (inc13 <= 0.07 and inc13 >= -0.07) and (
+                    inc24 <= 0.07 and inc24 >= -0.07):
+                return True
         return False
     
     def greaterThan(v1,v2):
@@ -148,34 +153,19 @@ class Strategy(object):
     @staticmethod
     def isAvlineBone(rdata):
         ema5 = Strategy.ema_n(rdata,0,5)
-        ema10 = Strategy.ema_n(rdata,0,10)
+        ema13 = Strategy.ema_n(rdata,0,13)
         ema24 = Strategy.ema_n(rdata,0,24)
+        ema54 = Strategy.ema_n(rdata,0,54)
         
-        if ema5 == 0 or ema10 == 0 or ema24 == 0:
+        if ema5 == 0 or ema13 == 0 or ema24 == 0 or ema54 == 0:
             return False
+        inc5 = (ema5-ema13)/ema13
+        inc13 = (ema13-ema24)/ema24
+        inc24 = (ema24-ema54)/ema54
 
-        if Strategy.trendUpward(rdata):
-            if Strategy.equalTo(ema5,ema10) and Strategy.equalTo(ema10,ema24):
+        if (inc5 > 0 and inc13>0) or (inc13 > 0 and inc24 > 0) or (inc5 >0 and inc24 > 0):
+            if (inc5 <= 0.002 and inc5 >= -0.002) and (inc13 <= 0.002 and inc13 >= -0.002) and (inc24 <= 0.033 and inc24 >= -0.033):
                 return True
-        return False
-
-    @staticmethod
-    def trendUpward(rdata):
-        ema5_0 = Strategy.ma_n(rdata,0,5)
-        ema5_1 = Strategy.ma_n(rdata,1,5)
-        #ema5_2 = Strategy.ma_n(rdata,2, 5)
-        ema10_0 = Strategy.ma_n(rdata, 0, 10)
-        ema10_1 = Strategy.ma_n(rdata, 1, 10)
-        #ema10_2 = Strategy.ma_n(rdata, 2, 10)
-        if ema5_0 == 0 or ema5_1 == 0 or ema10_0 == 0 or ema10_1 == 0:
-            return False
-        if (ema5_0 - ema10_0) >= (ema5_1-ema10_1) and ema5_0>=ema5_1 and ema10_0>=ema10_1:
-            return True
-        # vct5 = ema5_0-ema5_1
-        # vct10 = ema10_0-ema10_1
-        # cos = (1+vct5*vct10)/(math.sqrt((1+vct5*vct5))*math.sqrt(1+vct10*vct10))
-        # if cos >0 and cos < 0.73:
-        #     return True
         return False
 
     @staticmethod
