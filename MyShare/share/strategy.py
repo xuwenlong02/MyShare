@@ -106,8 +106,8 @@ class Strategy(object):
         inc24 = (ema24 - ema54) / ema54
 
         if (inc5 > 0 and inc13 > 0) or (inc13 > 0 and inc24 > 0) or (inc5 > 0 and inc24 > 0):
-            if (inc5 <= 0.07 and inc5 >= -0.07) and (inc13 <= 0.07 and inc13 >= -0.07) and (
-                    inc24 <= 0.07 and inc24 >= -0.07):
+            if (inc5 <= 0.065 and inc5 >= -0.065) and (inc13 <= 0.065 and inc13 >= -0.065) and (
+                    inc24 <= 0.065 and inc24 >= -0.065):
                 return True
         return False
     
@@ -164,7 +164,7 @@ class Strategy(object):
         inc24 = (ema24-ema54)/ema54
 
         if (inc5 > 0 and inc13>0) or (inc13 > 0 and inc24 > 0) or (inc5 >0 and inc24 > 0):
-            if (inc5 <= 0.002 and inc5 >= -0.002) and (inc13 <= 0.002 and inc13 >= -0.002) and (inc24 <= 0.033 and inc24 >= -0.033):
+            if (inc5 <= 0.002 and inc5 >= -0.002) and (inc13 <= 0.002 and inc13 >= -0.002) and (inc24 <= 0.063 and inc24 >= -0.063):
                 return True
         return False
 
