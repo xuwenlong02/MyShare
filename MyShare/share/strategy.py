@@ -20,10 +20,10 @@ class Strategy(object):
         liThs = []
         length = len(rdata)
         
-        for i in range(0,length,20):
+        for i in range(0,length,10):
             #测试
-            if i+20 <= length:
-                th = threading.Thread(name='%d'%i,target = runStrategy,args=(self,self.rdata[i:i+20]))
+            if i+10 <= length:
+                th = threading.Thread(name='%d'%i,target = runStrategy,args=(self,self.rdata[i:i+10]))
             else:
                 th = threading.Thread(name='%d'%i,target = runStrategy,args=(self,self.rdata[i:-1]))
 
@@ -63,6 +63,7 @@ class Strategy(object):
 
     @staticmethod
     def nowadayDf(code,symbol,rdf):
+        #return rdf
         strtoday = datetime.datetime.now().strftime('%Y%m%d')
         if rdf.loc[0, 'trade_date'] != strtoday:
             
@@ -99,7 +100,7 @@ class Strategy(object):
         ema24 = Strategy.ema_n(rdata, 0, 24)
         ema54 = Strategy.ema_n(rdata, 0, 54)
 
-        if ema5 == 0 or ema10 == 0 or ema24 == 0 or ema54 == 0:
+        if ema5 == 0 or ema13 == 0 or ema24 == 0 or ema54 == 0:
             return False
         inc5 = (ema5 - ema13) / ema13
         inc13 = (ema13 - ema24) / ema24
@@ -164,7 +165,7 @@ class Strategy(object):
         inc24 = (ema24-ema54)/ema54
 
         if (inc5 > 0 and inc13>0) or (inc13 > 0 and inc24 > 0) or (inc5 >0 and inc24 > 0):
-            if (inc5 <= 0.002 and inc5 >= -0.002) and (inc13 <= 0.002 and inc13 >= -0.002) and (inc24 <= 0.063 and inc24 >= -0.063):
+            if (inc5 <= 0.0015 and inc5 >= -0.0015) and (inc13 <= 0.0015 and inc13 >= -0.0015) and (inc24 <= 0.004 and inc24 >= -0.004):
                 return True
         return False
 

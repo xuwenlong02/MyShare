@@ -15,8 +15,10 @@ class LowSuction(Strategy):
         之后一直调整且缩量，且没有突破5日均线,
         最好有长上影线和长下影线
         """
-        if not Strategy.isStrongArranged(df):
-           return False
+        # if not Strategy.isStrongArranged(df):
+        #    return False
+
+
         pcg_chg = df.loc[0,'pct_chg']
         if pcg_chg < -7 and pcg_chg > 7:
             return False
@@ -25,6 +27,14 @@ class LowSuction(Strategy):
         vol = df.loc[0,'vol']
         high = max(close,open)
         low = min(close,open)
+        av5 = Strategy.ma_n(df, 0, 5)
+        av13 = Strategy.ma_n(df, 0, 13)
+        if av5 == 0 or av13 == 0:
+            return False
+        a1 = (close - av5) / av5
+        a2 = (av5 - av13) / av13
+        if not (a1 < 0.035 and a1 > -0.0015 and a2 < 0.055 and a2 >= -0.0015):
+            return False
 
         #需要有下影线
         if df.loc[0,'low'] < low:

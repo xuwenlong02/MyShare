@@ -46,7 +46,7 @@ class UpperShadow(Strategy):
         ul = df.loc[k,'high']-max(open,close)
         emv = Strategy.mv_n(df,k,5)
 
-        if ul > 0 and vol >=1.8*emv and vol <= 4*emv:
+        if ul > 0 and vol >=1.1*emv and vol <= 4*emv:
             for i in range(k+1,20+k,1):
                 if df.loc[i,'high'] > high or df.loc[i,'vol'] > vol*(1.01):
                     return False

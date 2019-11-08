@@ -1,8 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QAction, qApp,QWidget, QApplication,QListWidget,QHBoxLayout,QVBoxLayout,QComboBox,QToolBar
+from PyQt5.QtWidgets import QMainWindow, QAction, qApp,QWidget, QApplication,QListWidget,QHBoxLayout,QVBoxLayout,QComboBox,QToolBar,QTabWidget
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QModelIndex,Qt, pyqtSignal   
 from hmi.timingstatus import TimingStatus
+from hmi.daystatus import DayStatus
 
 from hmi.sharelistwidget import ShareListWidget
 import tushare as ts
@@ -16,6 +17,7 @@ from share.lowsuction import LowSuction
 from share.uppershadow import UpperShadow
 from share.sharedata import ShareData
 from share.limitforecast import LimitForecast
+from share.crossriversea import CrossRiverSea
 import datetime
 from share.strategy import Strategy
 
@@ -45,15 +47,23 @@ class MainWindow(QMainWindow):
         
         self.listWidget = ShareListWidget()
         self.comSelect = QComboBox()
-        self.comSelect.addItems(['全部','上影线战法','低吸战法','均线粘合向上','涨停式上影线战法'])
+        self.comSelect.addItems(['全部','上影线战法','低吸战法','均线粘合向上','涨停式上影线战法','上穿5日线战法'])
         vbox = QVBoxLayout()
         vbox.addWidget(self.comSelect,1)
         vbox.addWidget(self.listWidget,15)
-        
-        self.tradeWidget = TimingStatus()
+
+        self.tabWidget = QTabWidget()
         hbox = QHBoxLayout()
-        hbox.addLayout(vbox,15)
-        hbox.addWidget(self.tradeWidget,85)
+        hbox.addLayout(vbox, 14)
+        hbox.addWidget(self.tabWidget, 84)
+        
+        self.timingWidget = TimingStatus()
+        self.dayWidget = DayStatus()
+
+        self.tabWidget.addTab(self.timingWidget,u"日")
+        self.tabWidget.addTab(self.dayWidget,u"时")
+        self.tabWidget.currentChanged.connect(self.SlotTabChanged)
+
 
         self.comSelect.currentIndexChanged.connect(self.SlotStrategy)
         
@@ -63,6 +73,7 @@ class MainWindow(QMainWindow):
         self.listWidget.clicked.connect(self.Slot_ItemClicked)
 
     def initData(self):
+        self.currentId = -1
         #print(ts.get_concept_classified())
         #self.stocks = pd.read_csv('./data/stocks.csv',encoding='gbk')
         self.pro = ts.pro_api('604a0f99c257e0a0f3ae4ed6291a99e986f482be8083e561f09622ad')
@@ -73,18 +84,26 @@ class MainWindow(QMainWindow):
     def updateData(self,on:bool):
         sd = ShareData(self.pro,self.stocks)
 
-    def Slot_ItemClicked(self,index):
-        code = self.noticeStocks.ix[index.row(),'ts_code']
-        symbol = self.noticeStocks.ix[index.row(),'symbol']
-        types = {'ts_code':object,'trade_date':object,'open':float,
-                                                                     'high':float,'low':float,'close':float,'pre_close':float,
-                                                         'change':float,'pct_chg':float,'vol':float,'amount':float}
-        rdf =  pd.read_csv('./data/%s.csv'%code,encoding='gbk',dtype=types)
+    def SlotTabChanged(self,index):
+        if self.currentId == -1:
+            return
+        code = self.noticeStocks.ix[self.currentId, 'ts_code']
+        symbol = self.noticeStocks.ix[self.currentId, 'symbol']
+        types = {'ts_code': object, 'trade_date': object, 'open': float,
+                 'high': float, 'low': float, 'close': float, 'pre_close': float,
+                 'change': float, 'pct_chg': float, 'vol': float, 'amount': float}
+        rdf = pd.read_csv('./data/%s.csv' % code, encoding='gbk', dtype=types)
         if rdf is None or len(rdf) < 20:
             return
-        rdf = Strategy.nowadayDf(code,symbol,rdf)
+        rdf = Strategy.nowadayDf(code, symbol, rdf)
+        if index == 0:
+            self.timingWidget.activeCode(code)
+        elif index == 1:
+            self.dayWidget.activeCode(rdf)
 
-        self.tradeWidget.activeCode(rdf)
+    def Slot_ItemClicked(self,index):
+        self.currentId = index.row()
+        self.SlotTabChanged(self.tabWidget.currentIndex())
 
     def SlotStrategy(self,index):
         if index == 0:
@@ -109,5 +128,9 @@ class MainWindow(QMainWindow):
         elif index == 4:
             #均线粘合
             us = LimitForecast(self.stocks)
+            self.noticeStocks = us.resultList()
+            self.listWidget.setData(us.resultList())
+        elif index == 5:
+            us = CrossRiverSea(self.stocks)
             self.noticeStocks = us.resultList()
             self.listWidget.setData(us.resultList())
