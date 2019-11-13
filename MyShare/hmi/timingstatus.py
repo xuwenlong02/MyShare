@@ -34,10 +34,11 @@ class TimingStatus(QWidget):
         self.setLayout(vbox)
 
     def activeCode(self,rdata):
+        pass
         #rdata = ts.get_realtime_quotes('%s'%code)
-        self.titleWidget.updateData(rdata)
-        self.ttWidget.updateData(rdata)
-        self.tvWidget.updateData(rdata)
+        # self.titleWidget.updateData(rdata)
+        # self.ttWidget.updateData(rdata)
+        # self.tvWidget.updateData(rdata)
         #self.priceModel.setData(rdata)
         #self.histData = ts.get_hist_data('%06d'%code,start='2019-09-30',ktype='5')
         #print(self.histData)

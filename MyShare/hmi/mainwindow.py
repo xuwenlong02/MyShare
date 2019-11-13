@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         
         self.listWidget = ShareListWidget()
         self.comSelect = QComboBox()
-        self.comSelect.addItems(['全部','上影线战法','低吸战法','均线粘合向上','涨停式上影线战法','上穿5日线战法'])
+        self.comSelect.addItems(['全部','上影线战法','低吸战法','权重选股','涨停式上影线战法','上穿5日线战法'])
         vbox = QVBoxLayout()
         vbox.addWidget(self.comSelect,1)
         vbox.addWidget(self.listWidget,15)
@@ -108,12 +108,13 @@ class MainWindow(QMainWindow):
     def SlotStrategy(self,index):
         if index == 0:
             self.noticeStocks = self.stocks
-            self.listWidget.setData(self.stocks)
+
+            self.listWidget.setData(self.noticeStocks)
         elif index == 1:
             #上影线战法
             us = UpperShadow(self.stocks)
             self.noticeStocks = us.resultList()
-            self.listWidget.setData(us.resultList())
+            self.listWidget.setData(self.noticeStocks)
             
         elif index == 2:
             #低吸战法
@@ -124,13 +125,13 @@ class MainWindow(QMainWindow):
             #均线粘合
             us = AvlineBone(self.stocks)
             self.noticeStocks = us.resultList()
-            self.listWidget.setData(us.resultList())
+            self.listWidget.setData(self.noticeStocks)
         elif index == 4:
             #均线粘合
             us = LimitForecast(self.stocks)
             self.noticeStocks = us.resultList()
-            self.listWidget.setData(us.resultList())
+            self.listWidget.setData(self.noticeStocks)
         elif index == 5:
             us = CrossRiverSea(self.stocks)
             self.noticeStocks = us.resultList()
-            self.listWidget.setData(us.resultList())
+            self.listWidget.setData(self.noticeStocks)

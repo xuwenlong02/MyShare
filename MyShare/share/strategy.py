@@ -42,7 +42,7 @@ class Strategy(object):
             code = row['ts_code']
             symbol = row['symbol']
 
-            if 'ST' in symbol or '退' in symbol:
+            if 'ST' in symbol or '退' in symbol or 'st' in symbol:
                 continue
             path = './data/%s.csv'%code
             if not os.path.exists(path):
@@ -55,6 +55,7 @@ class Strategy(object):
             rdf = self.nowadayDf(code,symbol,rdf)
             if self.IsCorporate(rdf):
                 self.mutex.acquire()
+                row['weight'] = Strategy.weight(rdf)
                 self.liData = self.liData.append(row, ignore_index=True)
                 self.mutex.release()
 
@@ -89,6 +90,20 @@ class Strategy(object):
                         # old = rdf.loc[0:]
 
                     rdf = df_new.append(rdf, ignore_index=True,sort = True)
+        return rdf
+
+    @staticmethod
+    def curDF(code,symbol):
+        path = './data/%s.csv' % code
+        if not os.path.exists(path):
+            return None
+        types = {'ts_code': object, 'trade_date': object, 'open': float,
+                 'high': float, 'low': float, 'close': float, 'pre_close': float,
+                 'change': float, 'pct_chg': float, 'vol': float, 'amount': float}
+        rdf = pd.read_csv(path, encoding='gbk', dtype=types)
+        if rdf is None or len(rdf) < 20:
+            return rdf
+        rdf = Strategy.nowadayDf(code, symbol, rdf)
         return rdf
 
     @staticmethod
@@ -129,27 +144,23 @@ class Strategy(object):
     @staticmethod
     def weight(rdata):
         ema5 = Strategy.ma_n(rdata,0,5)
-        ema10 = Strategy.ma_n(rdata,0,10)
+        ema13 = Strategy.ma_n(rdata,0,13)
         ema24 = Strategy.ma_n(rdata,0,24)
         ema54 = Strategy.ma_n(rdata,0,54)
-        ema5_1 = Strategy.ma_n(rdata,1,5)
-        ema10_1 = Strategy.ma_n(rdata,1,10)
-        ema24_1 = Strategy.ma_n(rdata,1,24)
-        ema54_1 = Strategy.ma_n(rdata,1,54)
 
-        if ema5_1 == 0:
-            return 0
-        av5 = (ema5-ema5_1)/ema5_1
-        if ema10_1 == 0:
-            return av5*41*100
-        av10 = (ema10-ema10_1)/ema10_1
-        if ema24_1 == 0:
-            return (av5*41+av10*31)*100
-        av24 = (ema24-ema24_1)/ema24_1
-        if ema54_1 == 0:
-            return (av5*41+av10*31+av24*17)*100
-        av54 = (ema54-ema54_1)/ema54_1
-        return (av5*41+av10*31+av24*17+av54*11)*100
+        if ema5 == 0 or ema13 == 0 or ema24 == 0 or ema54 == 0:
+            return 1
+        sell5 = Strategy.sell_rate(ema5,rdata.loc[0,'close'],5)
+        sell13 = Strategy.sell_rate(ema13,rdata.loc[0,'close'],13)
+        sell24 = Strategy.sell_rate(ema24,rdata.loc[0,'close'],24)
+        sell54 = Strategy.sell_rate(ema54,rdata.loc[0,'close'],54)
+        return (1-sell5)*11+(1-sell13)*17+(1-sell24)*31+(1-sell54)*41
+
+
+    @staticmethod
+    def sell_rate(a,x,k):
+        r = (x-a)/a
+        return (1-math.exp(-k*r*r))
     
     @staticmethod
     def isAvlineBone(rdata):

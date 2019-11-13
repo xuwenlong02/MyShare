@@ -18,14 +18,18 @@ class ShareListModel(QAbstractListModel):
             if role != Qt.DisplayRole:
                 return QVariant()
             if index.column() == 0:
-                return QVariant("%s[%s]\n%s"%(self.listData.ix[index.row(),'name'],self.listData.ix[index.row(),'symbol'],self.listData.ix[index.row(),'industry']))
+                return QVariant('%s[%s]'%(self.listData.ix[index.row(),'name'],self.listData.ix[index.row(),'symbol']))
+            elif index.column() == 1:
+                return QVariant("%s"%self.listData.ix[index.row(),'industry'])
+            elif index.column() == 2:
+                return QVariant('%0.3f'%self.listData.ix[index.row(),'weight'])
         return QVariant()
 
     def rowCount(self,parent = QModelIndex()):
         return len(self.listData)
 
     def columnCount(self,parent = QModelIndex()):
-        return 1
+        return 3
 
     def setData(self,datas):
         if len(self.listData) > 0:

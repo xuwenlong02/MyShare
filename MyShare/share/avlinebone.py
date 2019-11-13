@@ -10,4 +10,6 @@ class AvlineBone(Strategy):
     """description of class"""
 
     def IsCorporate(self,df):
-        return self.isAvlineBone(df)
+       if Strategy.weight(df) > 0:
+           return True
+       return False
